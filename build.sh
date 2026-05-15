@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 DIR="$(cd "$(dirname "$0")" && pwd)"
-APP_NAME="Tasklog"
-BUNDLE_ID="com.local.tasklog"
+APP_NAME="Yoda"
+BUNDLE_ID="com.local.yoda"
 BUILD_DIR="$DIR/build"
 APP_PATH="$BUILD_DIR/$APP_NAME.app"
 CONTENTS="$APP_PATH/Contents"
@@ -14,12 +14,12 @@ mkdir -p "$CONTENTS/Resources"
 
 # ── Embed HTML as a Swift raw string constant ──────────────────────────────
 echo "→ Embedding HTML..."
-python3 - "$DIR/tasklog.html" "$BUILD_DIR/html_resource.swift" << 'PYEOF'
+python3 - "$DIR/yoda.html" "$BUILD_DIR/html_resource.swift" << 'PYEOF'
 import sys
 with open(sys.argv[1], 'r', encoding='utf-8', errors='replace') as f:
     html = f.read()
 html = html.replace('#"""', '#\\"\\"\\"')
-swift = 'let tasklogHTML: String = #"""\n' + html + '\n"""#\n'
+swift = 'let yodaHTML: String = #"""\n' + html + '\n"""#\n'
 with open(sys.argv[2], 'w', encoding='utf-8') as f:
     f.write(swift)
 print(f"  Embedded {len(html)} chars")
@@ -27,7 +27,7 @@ PYEOF
 
 # ── Generate icon ──────────────────────────────────────────────────────────
 echo "→ Generating icon..."
-ICONSET="$BUILD_DIR/tasklog.iconset"
+ICONSET="$BUILD_DIR/yoda.iconset"
 mkdir -p "$ICONSET"
 python3 "$DIR/make_icon.py" "$BUILD_DIR/icon_1024.png"
 for SIZE in 16 32 64 128 256 512; do
@@ -55,7 +55,7 @@ cat > "$CONTENTS/Info.plist" << PLIST
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key><string>$APP_NAME</string>
-    <key>CFBundleDisplayName</key><string>tasklog</string>
+    <key>CFBundleDisplayName</key><string>yoda</string>
     <key>CFBundleExecutable</key><string>$APP_NAME</string>
     <key>CFBundleIdentifier</key><string>$BUNDLE_ID</string>
     <key>CFBundleVersion</key><string>1.0</string>
@@ -74,6 +74,6 @@ rm -rf ~/Applications/"$APP_NAME.app"
 cp -r "$APP_PATH" ~/Applications/
 
 echo ""
-echo "✓ Done — Tasklog.app is in ~/Applications"
+echo "✓ Done — Yoda.app is in ~/Applications"
 echo "  First launch: right-click → Open (one-time Gatekeeper bypass)"
 echo "  Then drag it to your Dock."

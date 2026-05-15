@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>tasklog</title>
+<title>yoda</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -212,7 +212,7 @@ body {
     <button class="type-btn active" id="btn-note" onclick="setType('note')">note</button>
     <button class="type-btn" id="btn-todo" onclick="setType('todo')">todo</button>
   </div>
-  <input class="capture-input" id="capture-input" placeholder="what's on your mind? press enter →" onkeydown="onCaptureKey(event)" />
+  <input class="capture-input" id="capture-input" placeholder="on your mind, what is? enter, you must press →" onkeydown="onCaptureKey(event)" />
   <select class="macro-select" id="macro-select"></select>
   <button class="add-btn" onclick="addEntry()" title="Add (Enter)">+</button>
   <span id="stats" style="font-size:10px;color:var(--muted);white-space:nowrap;flex-shrink:0"></span>
@@ -235,7 +235,7 @@ body {
 </div>
 
 <script>
-const STORAGE_KEY = 'tasklog_standalone_v1';
+const STORAGE_KEY = 'yoda_v1';
 
 let data = { macrotasks: ['Inbox'], entries: [] };
 let ui = { view: 'proj', filter: { type: 'all', value: null }, entryType: 'note' };
@@ -251,10 +251,10 @@ function load() {
 
 function save() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
-  // Sync to ~/Documents/tasklog/ via Swift bridge
+  // Sync to ~/Documents/yoda/ via Swift bridge
   try {
-    if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.tasklog) {
-      window.webkit.messageHandlers.tasklog.postMessage(JSON.stringify(data));
+    if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.yoda) {
+      window.webkit.messageHandlers.yoda.postMessage(JSON.stringify(data));
     }
   } catch(e) {}
 }
@@ -459,8 +459,8 @@ function renderMain() {
   if (!entries.length) {
     main.innerHTML = `<div class="empty">
       <span class="empty-icon">_</span>
-      nothing here yet<br>
-      <span style="font-size:11px;color:var(--dim)">type above and hit enter</span>
+      empty, your list is.<br>
+      <span style="font-size:11px;color:var(--dim)">begin, you must.</span>
     </div>`;
     return;
   }

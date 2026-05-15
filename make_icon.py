@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generates a simple tasklog icon PNG."""
+"""Generates a simple yoda icon PNG."""
 import struct, zlib, math, sys
 
 def make_png(size, pixels_rgba):
@@ -72,6 +72,6 @@ def make_icon(out_path, size=1024):
         f.write(png_data)
 
 if __name__ == '__main__':
-    out = sys.argv[1] if len(sys.argv) > 1 else '/tmp/tasklog_icon.png'
+    out = sys.argv[1] if len(sys.argv) > 1 else '/tmp/yoda_icon.png'
     make_icon(out, 1024)
     print(f"Icon written to {out}")

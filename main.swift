@@ -5,10 +5,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKScri
     var window: NSWindow!
     var webView: WKWebView!
 
-    // ~/Documents/tasklog/
+    // ~/Documents/yoda/
     let saveDir: URL = {
         let url = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Documents/tasklog")
+            .appendingPathComponent("Documents/yoda")
         try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
         return url
     }()
@@ -24,13 +24,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKScri
             backing: .buffered,
             defer: false
         )
-        window.title = "tasklog"
+        window.title = "yoda"
         window.titlebarAppearsTransparent = true
         window.backgroundColor = NSColor(red: 0.055, green: 0.055, blue: 0.055, alpha: 1)
         window.minSize = NSSize(width: 600, height: 400)
 
         let controller = WKUserContentController()
-        controller.add(self, name: "tasklog")
+        controller.add(self, name: "yoda")
 
         let config = WKWebViewConfiguration()
         config.userContentController = controller
@@ -41,7 +41,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKScri
         webView.setValue(false, forKey: "drawsBackground")
 
         let baseURL = URL(fileURLWithPath: NSHomeDirectory() + "/Applications/")
-        webView.loadHTMLString(tasklogHTML, baseURL: baseURL)
+        webView.loadHTMLString(yodaHTML, baseURL: baseURL)
 
         window.contentView!.addSubview(webView)
         window.makeKeyAndOrderFront(nil)
@@ -51,7 +51,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKScri
 
     // ── Called by JS on every save ─────────────────────────────────────────
     func userContentController(_ ucc: WKUserContentController, didReceive message: WKScriptMessage) {
-        guard message.name == "tasklog",
+        guard message.name == "yoda",
               let jsonString = message.body as? String,
               let jsonData = jsonString.data(using: .utf8),
               let obj = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any]
@@ -83,7 +83,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKScri
         let entries    = data["entries"]    as? [[String: Any]] ?? []
 
         let df = DateFormatter(); df.dateFormat = "yyyy-MM-dd"
-        var lines = ["# tasklog", "", "*Last synced: \(df.string(from: Date()))*", ""]
+        var lines = ["# yoda", "", "*Last synced: \(df.string(from: Date()))*", ""]
 
         for macro in macrotasks {
             let macroEntries = entries.filter { ($0["macrotask"] as? String) == macro }
@@ -115,9 +115,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKScri
         let mainMenu = NSMenu()
         let appItem = NSMenuItem(); mainMenu.addItem(appItem)
         let appMenu = NSMenu(); appItem.submenu = appMenu
-        appMenu.addItem(withTitle: "Hide tasklog", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
+        appMenu.addItem(withTitle: "Hide yoda", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
         appMenu.addItem(.separator())
-        appMenu.addItem(withTitle: "Quit tasklog", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        appMenu.addItem(withTitle: "Quit yoda", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
 
         let winItem = NSMenuItem(); mainMenu.addItem(winItem)
         let winMenu = NSMenu(title: "Window"); winItem.submenu = winMenu
