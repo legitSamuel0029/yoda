@@ -34,3 +34,16 @@ targets:
         INFOPLIST_KEY_NSHighResolutionCapable: YES
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.productivity
         INFOPLIST_KEY_NSSupportsAutomaticGraphicsSwitching: YES
+
+  YodaTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: YodaTests
+    dependencies:
+      - target: Yoda
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.local.yoda.tests
+        BUNDLE_LOADER: $(TEST_HOST)
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/Yoda.app/Contents/MacOS/Yoda
