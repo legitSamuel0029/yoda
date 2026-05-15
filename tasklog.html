@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>tasklog</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0e0e0e;
+  --surface: #161616;
+  --surface2: #1e1e1e;
+  --border: #282828;
+  --border2: #333;
+  --text: #d8d8d8;
+  --muted: #666;
+  --dim: #444;
+  --accent: #a3e635;
+  --accent-dim: #4a6b18;
+  --todo-color: #60a5fa;
+  --done-text: #444;
+  --done-line: #333;
+  --font: 'IBM Plex Mono', 'Courier New', monospace;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.6;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── TITLEBAR ── */
+.titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  height: 42px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--surface);
+}
+.title { font-size: 13px; font-weight: 500; color: var(--accent); letter-spacing: 0.06em; }
+.title span { color: var(--muted); font-weight: 300; }
+.stats { font-size: 11px; color: var(--muted); }
+
+/* ── CAPTURE BAR ── */
+.capture { 
+  display: flex; align-items: center; gap: 8px; 
+  padding: 8px 12px; border-bottom: 1px solid var(--border); 
+  flex-shrink: 0; background: var(--surface);
+}
+.type-toggle { display: flex; border: 1px solid var(--border2); border-radius: 5px; overflow: hidden; flex-shrink: 0; }
+.type-btn { 
+  padding: 3px 10px; font-size: 11px; font-family: var(--font); 
+  cursor: pointer; border: none; background: transparent; color: var(--muted); 
+  transition: all 0.15s; letter-spacing: 0.03em;
+}
+.type-btn.active { background: var(--surface2); color: var(--text); }
+.capture-input { 
+  flex: 1; background: transparent; border: 1px solid var(--border); 
+  border-radius: 5px; padding: 5px 10px; font-family: var(--font); 
+  font-size: 12px; color: var(--text); outline: none; min-width: 0;
+  transition: border-color 0.15s;
+}
+.capture-input:focus { border-color: var(--dim); }
+.capture-input::placeholder { color: var(--muted); }
+.macro-select { 
+  font-family: var(--font); font-size: 11px; color: var(--muted); 
+  background: var(--surface); border: 1px solid var(--border); 
+  border-radius: 5px; padding: 4px 8px; outline: none; max-width: 130px;
+  cursor: pointer;
+}
+.macro-select:focus { border-color: var(--dim); }
+.add-btn { 
+  width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; 
+  background: var(--surface2); border: 1px solid var(--border2); border-radius: 5px; 
+  cursor: pointer; color: var(--muted); font-size: 18px; line-height: 1; flex-shrink: 0; 
+  transition: all 0.15s;
+}
+.add-btn:hover { color: var(--accent); border-color: var(--accent-dim); }
+
+/* ── BODY ── */
+.body { display: flex; flex: 1; overflow: hidden; }
+
+/* ── SIDEBAR ── */
+.sidebar { 
+  width: 180px; flex-shrink: 0; border-right: 1px solid var(--border); 
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--surface);
+}
+.view-tabs { display: flex; border-bottom: 1px solid var(--border); }
+.view-tab { 
+  flex: 1; padding: 7px 0; font-size: 11px; font-family: var(--font); 
+  text-align: center; cursor: pointer; color: var(--muted); 
+  background: none; border: none; border-bottom: 2px solid transparent; 
+  transition: color 0.15s; letter-spacing: 0.04em;
+}
+.view-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.sidebar-scroll { flex: 1; overflow-y: auto; padding: 6px 0; }
+.sidebar-scroll::-webkit-scrollbar { width: 3px; }
+.sidebar-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+.sb-item { 
+  display: flex; align-items: center; padding: 4px 12px; cursor: pointer; 
+  color: var(--muted); transition: background 0.1s; font-size: 12px; gap: 4px;
+}
+.sb-item:hover { background: var(--surface2); color: var(--text); }
+.sb-item.active { color: var(--text); background: var(--surface2); }
+.sb-item.active .sb-name { color: var(--accent); }
+.sb-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sb-count { font-size: 10px; color: var(--dim); flex-shrink: 0; }
+.sb-del { 
+  font-size: 11px; color: var(--dim); opacity: 0; cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; transition: opacity 0.1s, color 0.1s;
+}
+.sb-item:hover .sb-del { opacity: 1; }
+.sb-del:hover { color: #f87171; }
+.add-proj-area { border-top: 1px solid var(--border); padding: 8px 10px; flex-shrink: 0; }
+.add-proj-btn { 
+  font-family: var(--font); font-size: 11px; color: var(--dim); 
+  background: none; border: none; cursor: pointer; width: 100%; 
+  text-align: left; padding: 2px 2px; transition: color 0.15s; letter-spacing: 0.02em;
+}
+.add-proj-btn:hover { color: var(--muted); }
+.add-proj-input { 
+  width: 100%; font-family: var(--font); font-size: 11px; padding: 4px 8px; 
+  border: 1px solid var(--border2); border-radius: 4px; background: var(--surface2); 
+  color: var(--text); outline: none; margin-top: 4px;
+}
+.add-proj-input:focus { border-color: var(--dim); }
+
+/* ── MAIN ── */
+.main { flex: 1; overflow-y: auto; }
+.main::-webkit-scrollbar { width: 4px; }
+.main::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+.group { border-bottom: 1px solid var(--border); }
+.group-hdr { 
+  padding: 8px 14px 4px; display: flex; align-items: center; gap: 7px; 
+  position: sticky; top: 0; background: var(--bg); z-index: 1;
+}
+.group-lbl { font-size: 11px; color: var(--dim); letter-spacing: 0.04em; }
+.group-line { flex: 1; height: 1px; background: var(--border); }
+
+.entry { 
+  display: flex; align-items: flex-start; gap: 8px; padding: 5px 14px; 
+  transition: background 0.1s;
+}
+.entry:hover { background: var(--surface); }
+.entry:hover .e-del { opacity: 1; }
+
+.checkbox { 
+  width: 13px; height: 13px; border: 1px solid var(--border2); border-radius: 3px; 
+  cursor: pointer; display: flex; align-items: center; justify-content: center; 
+  flex-shrink: 0; margin-top: 3px; transition: all 0.15s;
+}
+.checkbox:hover { border-color: var(--dim); }
+.checkbox.checked { background: #166534; border-color: #15803d; }
+.checkbox.checked::after { 
+  content: ''; display: block; width: 7px; height: 5px; 
+  border-left: 1.5px solid #86efac; border-bottom: 1.5px solid #86efac; 
+  transform: rotate(-45deg) translateY(-1px);
+}
+
+.note-bullet { 
+  width: 4px; height: 4px; border-radius: 50%; background: var(--dim); 
+  flex-shrink: 0; margin-top: 7px;
+}
+
+.e-body { flex: 1; min-width: 0; }
+.e-text { font-size: 12px; color: var(--text); line-height: 1.5; word-break: break-word; }
+.e-text.done { color: var(--done-text); text-decoration: line-through; text-decoration-color: var(--done-line); }
+.e-tag { 
+  display: inline-block; font-size: 10px; color: var(--dim); margin-left: 8px; 
+  background: var(--surface2); border: 1px solid var(--border); 
+  border-radius: 3px; padding: 0 5px; vertical-align: middle; line-height: 1.8;
+}
+.e-del { 
+  opacity: 0; cursor: pointer; color: var(--dim); font-size: 12px; 
+  flex-shrink: 0; margin-top: 3px; transition: opacity 0.1s, color 0.1s;
+  background: none; border: none; font-family: var(--font); line-height: 1;
+  padding: 0; display: flex; align-items: center;
+}
+.e-del:hover { color: #f87171; }
+
+/* ── EMPTY STATE ── */
+.empty { 
+  padding: 60px 20px; text-align: center; color: var(--dim); 
+  font-size: 12px; line-height: 2;
+}
+.empty-icon { font-size: 28px; display: block; margin-bottom: 8px; }
+
+/* scrollbar for firefox */
+.main, .sidebar-scroll { scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
+</style>
+</head>
+<body>
+
+
+
+<div class="capture">
+  <div class="type-toggle">
+    <button class="type-btn active" id="btn-note" onclick="setType('note')">note</button>
+    <button class="type-btn" id="btn-todo" onclick="setType('todo')">todo</button>
+  </div>
+  <input class="capture-input" id="capture-input" placeholder="what's on your mind? press enter →" onkeydown="onCaptureKey(event)" />
+  <select class="macro-select" id="macro-select"></select>
+  <button class="add-btn" onclick="addEntry()" title="Add (Enter)">+</button>
+  <span id="stats" style="font-size:10px;color:var(--muted);white-space:nowrap;flex-shrink:0"></span>
+</div>
+
+<div class="body">
+  <div class="sidebar">
+    <div class="view-tabs">
+      <button class="view-tab active" id="tab-proj" onclick="setView('proj')">projects</button>
+      <button class="view-tab" id="tab-date" onclick="setView('date')">dates</button>
+    </div>
+    <div class="sidebar-scroll" id="sidebar-list"></div>
+    <div class="add-proj-area">
+      <button class="add-proj-btn" id="add-proj-btn" onclick="toggleAddProj()">+ new project</button>
+      <input class="add-proj-input" id="proj-input" placeholder="project name…" 
+             style="display:none" onkeydown="onProjKey(event)" onblur="onProjBlur()" />
+    </div>
+  </div>
+  <div class="main" id="main-area"></div>
+</div>
+
+<script>
+const STORAGE_KEY = 'tasklog_standalone_v1';
+
+let data = { macrotasks: ['Inbox'], entries: [] };
+let ui = { view: 'proj', filter: { type: 'all', value: null }, entryType: 'note' };
+
+// ── Persistence ──
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) data = JSON.parse(raw);
+    if (!data.macrotasks.includes('Inbox')) data.macrotasks.unshift('Inbox');
+  } catch(e) {}
+}
+
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+  // Sync to ~/Documents/tasklog/ via Swift bridge
+  try {
+    if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.tasklog) {
+      window.webkit.messageHandlers.tasklog.postMessage(JSON.stringify(data));
+    }
+  } catch(e) {}
+}
+
+// Called by Swift on startup — file wins so Claude Code edits sync back in
+window.__injectFromFile = function(fileData) {
+  if (!fileData || !fileData.entries) return;
+  data = fileData;
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+  if (loaded) render();
+};
+
+// ── Helpers ──
+function todayStr() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function fmtDate(s) {
+  const today = todayStr();
+  const ydDate = new Date(); ydDate.setDate(ydDate.getDate() - 1);
+  const yd = ydDate.toISOString().split('T')[0];
+  const d = new Date(s + 'T12:00:00');
+  const pretty = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  if (s === today) return 'today · ' + pretty.replace(/^\w+,\s*/, '');
+  if (s === yd) return 'yesterday · ' + pretty.replace(/^\w+,\s*/, '');
+  return pretty.toLowerCase();
+}
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+// ── State mutators ──
+function setType(t) {
+  ui.entryType = t;
+  document.getElementById('btn-note').className = 'type-btn' + (t === 'note' ? ' active' : '');
+  document.getElementById('btn-todo').className = 'type-btn' + (t === 'todo' ? ' active' : '');
+}
+
+function setView(v) {
+  ui.view = v;
+  ui.filter = { type: 'all', value: null };
+  document.getElementById('tab-proj').className = 'view-tab' + (v === 'proj' ? ' active' : '');
+  document.getElementById('tab-date').className = 'view-tab' + (v === 'date' ? ' active' : '');
+  render();
+}
+
+function setFilter(type, value) {
+  ui.filter = { type, value };
+  render();
+}
+
+function addEntry() {
+  const inp = document.getElementById('capture-input');
+  const txt = inp.value.trim();
+  if (!txt) return;
+  const macrotask = document.getElementById('macro-select').value || 'Inbox';
+  data.entries.unshift({
+    id: uid(), text: txt, type: ui.entryType,
+    checked: false, date: todayStr(), macrotask
+  });
+  save();
+  inp.value = '';
+  inp.focus();
+  render();
+}
+
+function toggleCheck(id) {
+  const e = data.entries.find(x => x.id === id);
+  if (e) { e.checked = !e.checked; save(); renderMain(); }
+}
+
+function delEntry(id) {
+  data.entries = data.entries.filter(x => x.id !== id);
+  save(); render();
+}
+
+function addProject(name) {
+  name = name.trim();
+  if (!name || data.macrotasks.includes(name)) return false;
+  data.macrotasks.push(name);
+  save(); renderSelect(); renderSidebar();
+  return true;
+}
+
+function delProject(name) {
+  if (name === 'Inbox') return;
+  data.macrotasks = data.macrotasks.filter(m => m !== name);
+  data.entries = data.entries.map(e => e.macrotask === name ? {...e, macrotask: 'Inbox'} : e);
+  if (ui.filter.value === name) ui.filter = { type: 'all', value: null };
+  save(); render();
+}
+
+// ── Project input UI ──
+function toggleAddProj() {
+  const inp = document.getElementById('proj-input');
+  const btn = document.getElementById('add-proj-btn');
+  if (inp.style.display === 'none') {
+    inp.style.display = 'block';
+    btn.style.display = 'none';
+    inp.value = '';
+    inp.focus();
+  } else {
+    inp.style.display = 'none';
+    btn.style.display = 'block';
+  }
+}
+
+function onProjKey(e) {
+  if (e.key === 'Enter') {
+    const ok = addProject(e.target.value);
+    if (ok) toggleAddProj();
+  }
+  if (e.key === 'Escape') toggleAddProj();
+}
+
+function onProjBlur() {
+  setTimeout(() => {
+    const inp = document.getElementById('proj-input');
+    if (inp && !inp.value.trim()) toggleAddProj();
+  }, 150);
+}
+
+function onCaptureKey(e) {
+  if (e.key === 'Enter') addEntry();
+}
+
+// ── Render ──
+function renderSelect() {
+  const sel = document.getElementById('macro-select');
+  const cur = sel.value;
+  sel.innerHTML = data.macrotasks
+    .map(m => `<option value="${esc(m)}"${m === cur ? ' selected' : ''}>${esc(m)}</option>`)
+    .join('');
+}
+
+function renderSidebar() {
+  const list = document.getElementById('sidebar-list');
+  const all = data.entries.length;
+
+  if (ui.view === 'proj') {
+    const counts = {};
+    data.macrotasks.forEach(m => counts[m] = 0);
+    data.entries.forEach(e => { counts[e.macrotask] = (counts[e.macrotask] || 0) + 1; });
+
+    list.innerHTML = [
+      sidebarItem('all', '', all, ui.filter.type === 'all', () => setFilter('all', null)),
+      ...data.macrotasks.map(m =>
+        sidebarItem(m, m !== 'Inbox' ? m : '', counts[m] || 0,
+          ui.filter.type === 'macrotask' && ui.filter.value === m,
+          () => setFilter('macrotask', m),
+          m !== 'Inbox' ? () => delProject(m) : null)
+      )
+    ].join('');
+  } else {
+    const dates = [...new Set(data.entries.map(e => e.date))].sort().reverse();
+    const dateCounts = {};
+    data.entries.forEach(e => { dateCounts[e.date] = (dateCounts[e.date] || 0) + 1; });
+
+    list.innerHTML = [
+      sidebarItem('all', '', all, ui.filter.type === 'all', () => setFilter('all', null)),
+      ...dates.map(d => {
+        const label = d === todayStr() ? 'today' : new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}).toLowerCase();
+        return sidebarItem(label, '', dateCounts[d] || 0,
+          ui.filter.type === 'date' && ui.filter.value === d,
+          () => setFilter('date', d));
+      })
+    ].join('');
+  }
+}
+
+function sidebarItem(name, fullName, count, active, clickFn, delFn) {
+  const id = 'si_' + Math.random().toString(36).slice(2);
+  const delId = 'sd_' + Math.random().toString(36).slice(2);
+  setTimeout(() => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', clickFn);
+    if (delFn) {
+      const del = document.getElementById(delId);
+      if (del) del.addEventListener('click', e => { e.stopPropagation(); delFn(); });
+    }
+  }, 0);
+  return `<div class="sb-item${active ? ' active' : ''}" id="${id}">
+    <span class="sb-name">${esc(name)}</span>
+    <span class="sb-count">${count || ''}</span>
+    ${delFn ? `<span class="sb-del" id="${delId}" title="remove project">✕</span>` : ''}
+  </div>`;
+}
+
+function renderMain() {
+  const main = document.getElementById('main-area');
+  let entries = data.entries;
+  if (ui.filter.type === 'macrotask') entries = entries.filter(e => e.macrotask === ui.filter.value);
+  else if (ui.filter.type === 'date') entries = entries.filter(e => e.date === ui.filter.value);
+
+  if (!entries.length) {
+    main.innerHTML = `<div class="empty">
+      <span class="empty-icon">_</span>
+      nothing here yet<br>
+      <span style="font-size:11px;color:var(--dim)">type above and hit enter</span>
+    </div>`;
+    return;
+  }
+
+  const showTags = ui.filter.type === 'all';
+  const groupKey = (ui.view === 'proj' || ui.filter.type === 'date') ? 'date' : 'macrotask';
+  const groups = {};
+  entries.forEach(e => {
+    const k = e[groupKey];
+    if (!groups[k]) groups[k] = [];
+    groups[k].push(e);
+  });
+
+  const keys = Object.keys(groups);
+  if (groupKey === 'date') keys.sort((a, b) => b.localeCompare(a));
+
+  main.innerHTML = keys.map(k => {
+    const label = groupKey === 'date' ? fmtDate(k) : k;
+    const entriesHtml = groups[k].map(e => {
+      const tagHtml = showTags ? `<span class="e-tag">${esc(e.macrotask)}</span>` : '';
+      const delBtn = `<button class="e-del" onclick="delEntry('${e.id}')" title="delete">✕</button>`;
+      if (e.type === 'todo') {
+        return `<div class="entry">
+          <div class="checkbox${e.checked?' checked':''}" onclick="toggleCheck('${e.id}')" role="checkbox" aria-checked="${e.checked}" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')toggleCheck('${e.id}')"></div>
+          <div class="e-body"><span class="e-text${e.checked?' done':''}">${esc(e.text)}</span>${tagHtml}</div>
+          ${delBtn}
+        </div>`;
+      } else {
+        return `<div class="entry">
+          <div class="note-bullet"></div>
+          <div class="e-body"><span class="e-text">${esc(e.text)}</span>${tagHtml}</div>
+          ${delBtn}
+        </div>`;
+      }
+    }).join('');
+
+    return `<div class="group">
+      <div class="group-hdr"><span class="group-lbl">${esc(label)}</span><div class="group-line"></div></div>
+      ${entriesHtml}
+    </div>`;
+  }).join('');
+}
+
+function renderStats() {
+  const total = data.entries.length;
+  const open = data.entries.filter(e => e.type === 'todo' && !e.checked).length;
+  document.getElementById('stats').textContent = open ? `${open} open todo${open>1?'s':''} · ${total} total` : `${total} entries`;
+}
+
+function render() {
+  renderSelect();
+  renderSidebar();
+  renderMain();
+  renderStats();
+}
+
+// ── Boot ──
+load();
+render();
+</script>
+</body>
+</html>
