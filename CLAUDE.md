@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A minimal native macOS app that wraps a single-page HTML/JS task tracker in a `WKWebView`. There's no package manager, no test suite, no linter — three source files (`main.swift`, `yoda.html`, `make_icon.py`) and a build script.
+A minimal native macOS app that wraps a single-page HTML/JS task tracker in a `WKWebView`. There's no package manager, no test suite, no linter — two source files (`main.swift`, `yoda.html`), a pre-built icon, and a build script.
 
 ## Build / run
 
@@ -12,7 +12,7 @@ A minimal native macOS app that wraps a single-page HTML/JS task tracker in a `W
 ./build.sh
 ```
 
-This does everything: embeds HTML, generates the icon, compiles Swift, packages `Yoda.app`, and installs it to `~/Applications/`. There is no incremental build — every change re-runs the full pipeline. First launch requires a Gatekeeper bypass (right-click → Open).
+This does everything: embeds HTML, copies the pre-built icon, compiles Swift, packages `Yoda.app`, and installs it to `~/Applications/`. There is no incremental build — every change re-runs the full pipeline. First launch requires a Gatekeeper bypass (right-click → Open).
 
 Run directly without installing: `open build/Yoda.app` after building.
 
@@ -42,6 +42,6 @@ If you change the JSON schema, update both sides: the JS shape in `yoda.html` (`
 
 - `main.swift` — `NSApplication` + `WKWebView` host, bridge handler, markdown generator, menu setup.
 - `yoda.html` — entire UI (HTML/CSS/JS in one file, no external JS deps beyond a Google Fonts stylesheet).
-- `make_icon.py` — procedurally generates `icon_1024.png`; called by `build.sh`.
+- `Resources/AppIcon.icns` — pre-built app icon, copied verbatim into the bundle by `build.sh`. To replace: produce a new 1024px PNG, pipe it through `sips` + `iconutil` to get a fresh `.icns`, commit it.
 - `build.sh` — the only build entry point.
-- `build/` — generated artifacts (gitignored in spirit; the `html_resource.swift` and `.iconset/` here are throwaway).
+- `build/` — generated artifacts (gitignored; `html_resource.swift` here is throwaway).

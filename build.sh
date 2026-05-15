@@ -25,18 +25,10 @@ with open(sys.argv[2], 'w', encoding='utf-8') as f:
 print(f"  Embedded {len(html)} chars")
 PYEOF
 
-# ── Generate icon ──────────────────────────────────────────────────────────
-echo "→ Generating icon..."
-ICONSET="$BUILD_DIR/yoda.iconset"
-mkdir -p "$ICONSET"
-python3 "$DIR/make_icon.py" "$BUILD_DIR/icon_1024.png"
-for SIZE in 16 32 64 128 256 512; do
-    sips -z $SIZE $SIZE "$BUILD_DIR/icon_1024.png" --out "$ICONSET/icon_${SIZE}x${SIZE}.png" > /dev/null 2>&1
-    DOUBLE=$((SIZE * 2))
-    sips -z $DOUBLE $DOUBLE "$BUILD_DIR/icon_1024.png" --out "$ICONSET/icon_${SIZE}x${SIZE}@2x.png" > /dev/null 2>&1
-done
-iconutil -c icns "$ICONSET" -o "$CONTENTS/Resources/AppIcon.icns"
-echo "  Icon created"
+# ── Icon (pre-built, committed at Resources/AppIcon.icns) ──────────────────
+# Regenerate by piping a 1024px PNG through `sips` + `iconutil`.
+echo "→ Copying icon..."
+cp "$DIR/Resources/AppIcon.icns" "$CONTENTS/Resources/AppIcon.icns"
 
 # ── Compile ────────────────────────────────────────────────────────────────
 echo "→ Compiling Swift..."
