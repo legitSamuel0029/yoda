@@ -1,6 +1,6 @@
 # yoda
 
-> Yet anOther toDo App.
+> Yet an...Other (to)Do App.
 
 A minimal native macOS task and note tracker. One window, a capture bar at the top, projects in the sidebar, notes and todos stacked by date. No accounts, no sync, no telemetry — just a `~/Documents/yoda/` directory you can grep, version, or edit by hand.
 
@@ -28,7 +28,3 @@ External edits to `data.json` sync into the app on next launch. The reverse does
 - `build.sh` — embeds `yoda.html` into the Swift binary as a raw-string literal, then compiles.
 
 Three source files, no package manager, no test suite, no linter. Read it in an afternoon, fork it in an evening.
-
-## Why "yoda"
-
-`Y`et an`O`ther to`D`o `A`pp. The capital O is doing a lot of work. It's a tradition — see also: YAML, YACC, YASnippet.
